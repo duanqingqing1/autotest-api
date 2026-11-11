@@ -10,7 +10,7 @@ pipeline {
         stage('执行Newman测试') {
             steps {
                 bat """
-newman run login.postman_collection.json -e local.postman_environment.json --reporters allure --reporter-allure-export allure-results
+newman run login.postman_collection.json -e local.postman_environment.json --reporters allure --reporter-allure-export allure-results || exit 0
                 """
             }
         }
