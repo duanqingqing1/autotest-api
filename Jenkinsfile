@@ -1,23 +1,23 @@
 pipeline {
     agent any
+
     stages {
-        stage('检出代码') {
+        stage('执行 Newman 回归') {
             steps {
-                checkout scm
-                bat "dir"
+                bat '''
+                    set "PATH=D:\\app_path\\nodejs;D:\\app_path\\npm-global;%PATH%"
+                    if exist allure-results rmdir /s /q allure-results
+                    if exist junit-result.xml del /q junit-result.xml
+                    call newman run login.postman_collection.json -e local.postman_environment.json --reporters cli,junit,allure --reporter-junit-export junit-result.xml --reporter-allure-export allure-results
+                '''
             }
         }
-        stage('执行Newman测试') {
-            steps {
-                bat """
-newman run login.postman_collection.json -e local.postman_environment.json --reporters allure --reporter-allure-export allure-results || exit 0
-                """
-            }
-        }
-        stage('生成Allure报告') {
-            steps {
-                allure includeResults: true, results: [[path: 'allure-results']]
-            }
+    }
+
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: 'junit-result.xml'
+            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
         }
     }
 }
